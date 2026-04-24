@@ -12,6 +12,7 @@ import { ToastAction } from "@/components/ui/toast";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ColorVariant } from "@/lib/types";
+import CustomerPriceGate from "@/components/CustomerPriceGate";
 
 interface BundlePageProps {
   params: {
@@ -156,24 +157,31 @@ export default function BundlePage({ params }: BundlePageProps) {
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold">{bundle.name}</h1>
-            <div className="flex items-center gap-4 mt-2">
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold">
-                  {bundle.price.toFixed(2)} RON
-                </span>
-                {bundle.oldPrice && (
-                  <span className="text-gray-500 line-through">
-                    {bundle.oldPrice.toFixed(2)} RON
-                  </span>
-                )}
+            <div className="flex flex-wrap items-center gap-4 mt-2">
+              <div className="flex flex-wrap items-baseline gap-2 min-w-0">
+                <CustomerPriceGate>
+                  <>
+                    <span className="text-2xl font-bold">
+                      {bundle.price.toFixed(2)} RON
+                    </span>
+                    {bundle.oldPrice && (
+                      <span className="text-gray-500 line-through">
+                        {bundle.oldPrice.toFixed(2)} RON
+                      </span>
+                    )}
+                  </>
+                </CustomerPriceGate>
               </div>
               {bundle.oldPrice && discountPercentage > 0 && (
-                <Badge
-                  variant="outline"
-                  className="text-red-600 border-red-600"
-                >
-                  Economisești {(bundle.oldPrice - bundle.price).toFixed(2)} RON
-                </Badge>
+                <CustomerPriceGate>
+                  <Badge
+                    variant="outline"
+                    className="text-red-600 border-red-600"
+                  >
+                    Economisești {(bundle.oldPrice - bundle.price).toFixed(2)}{" "}
+                    RON
+                  </Badge>
+                </CustomerPriceGate>
               )}
             </div>
           </div>
@@ -216,8 +224,10 @@ export default function BundlePage({ params }: BundlePageProps) {
                       {item.quantity} {item.quantity > 1 ? "bucăți" : "bucată"}
                     </p>
                   </div>
-                  <div className="text-sm font-semibold">
-                    {item.product.price.toFixed(2)} RON
+                  <div className="text-sm font-semibold text-right max-w-[140px]">
+                    <CustomerPriceGate>
+                      <span>{item.product.price.toFixed(2)} RON</span>
+                    </CustomerPriceGate>
                   </div>
                 </div>
               ))}

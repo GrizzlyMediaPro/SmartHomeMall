@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { useEffect, useState } from "react";
 import { ColorVariant } from "@/lib/types";
+import CustomerPriceGate from "@/components/CustomerPriceGate";
 
 interface BundleItem {
   id: string;
@@ -185,15 +186,19 @@ export default function BundlesPage() {
                 </p>
 
                 <div className="flex justify-between items-center mb-4">
-                  <div className="flex flex-col">
-                    <span className="text-lg font-bold text-primary">
-                      {bundle.price.toFixed(2)} RON
-                    </span>
-                    {bundle.oldPrice && (
-                      <span className="text-sm text-gray-500 line-through">
-                        {bundle.oldPrice.toFixed(2)} RON
-                      </span>
-                    )}
+                  <div className="flex flex-col min-w-0 flex-1 mr-2">
+                    <CustomerPriceGate>
+                      <>
+                        <span className="text-lg font-bold text-primary">
+                          {bundle.price.toFixed(2)} RON
+                        </span>
+                        {bundle.oldPrice && (
+                          <span className="text-sm text-gray-500 line-through">
+                            {bundle.oldPrice.toFixed(2)} RON
+                          </span>
+                        )}
+                      </>
+                    </CustomerPriceGate>
                   </div>
 
                   <Badge variant="outline" className="text-xs">

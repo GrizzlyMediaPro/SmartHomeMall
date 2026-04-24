@@ -26,6 +26,7 @@ import { useCart } from "@/contexts/cart-context";
 import { loadStripe } from "@stripe/stripe-js";
 import { X } from "lucide-react";
 import type { UserDiscount } from "@/lib/types";
+import CustomerPriceGate from "@/components/CustomerPriceGate";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
@@ -724,9 +725,11 @@ export default function OrderDetailsForm({ userId }: { userId?: string }) {
                   <p className="text-sm text-gray-600">
                     Color: {item.selectedColor}
                   </p>
-                  <p className="text-sm font-medium">
-                    ${item.variant.price.toFixed(2)} x {item.quantity}
-                  </p>
+                  <CustomerPriceGate>
+                    <p className="text-sm font-medium">
+                      {item.variant.price.toFixed(2)} lei × {item.quantity}
+                    </p>
+                  </CustomerPriceGate>
                 </div>
               </div>
             ))}
@@ -752,77 +755,87 @@ export default function OrderDetailsForm({ userId }: { userId?: string }) {
             {discountError && (
               <p className="text-red-500 text-sm">{discountError}</p>
             )}
-            {appliedDiscounts.map((discount) => (
-              <div
-                key={discount.code}
-                className="flex justify-between items-center"
-              >
-                <span>{discount.code}</span>
-                <span>
-                  {discount.type === "free_shipping"
-                    ? "Transport gratuit"
-                    : discount.type === "percentage"
-                    ? `-${discount.value}%`
-                    : `-${discount.value.toFixed(2)} RON`}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    setAppliedDiscounts(
-                      appliedDiscounts.filter((d) => d.code !== discount.code)
-                    )
-                  }
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+            {appliedDiscounts.length > 0 && (
+              <CustomerPriceGate>
+                <>
+                  {appliedDiscounts.map((discount) => (
+                    <div
+                      key={discount.code}
+                      className="flex justify-between items-center"
+                    >
+                      <span>{discount.code}</span>
+                      <span>
+                        {discount.type === "free_shipping"
+                          ? "Transport gratuit"
+                          : discount.type === "percentage"
+                          ? `-${discount.value}%`
+                          : `-${discount.value.toFixed(2)} RON`}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setAppliedDiscounts(
+                            appliedDiscounts.filter(
+                              (d) => d.code !== discount.code
+                            )
+                          )
+                        }
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </>
+              </CustomerPriceGate>
+            )}
           </div>
-          <div className="space-y-2 mt-4">
-            <div className="flex justify-between text-sm">
-              <span>Subtotal</span>
-              <div className="text-right">
-                <span
-                  className={
-                    percentageDiscount > 0 || fixedDiscount > 0
-                      ? "line-through text-gray-500"
-                      : ""
-                  }
-                >
-                  ${subtotal.toFixed(2)}
-                </span>
-                {(percentageDiscount > 0 || fixedDiscount > 0) && (
-                  <div className="text-green-600">
-                    ${adjustedSubtotal.toFixed(2)}
-                  </div>
-                )}
+          <CustomerPriceGate>
+            <div className="space-y-2 mt-4">
+              <div className="flex justify-between text-sm">
+                <span>Subtotal</span>
+                <div className="text-right">
+                  <span
+                    className={
+                      percentageDiscount > 0 || fixedDiscount > 0
+                        ? "line-through text-gray-500"
+                        : ""
+                    }
+                  >
+                    {subtotal.toFixed(2)} lei
+                  </span>
+                  {(percentageDiscount > 0 || fixedDiscount > 0) && (
+                    <div className="text-green-600">
+                      {adjustedSubtotal.toFixed(2)} lei
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-between text-sm">
+                <span>Transport</span>
+                <div className="text-right">
+                  <span
+                    className={
+                      hasShippingDiscount ? "line-through text-gray-500" : ""
+                    }
+                  >
+                    {shipping.toFixed(2)} lei
+                  </span>
+                  {hasShippingDiscount && (
+                    <div className="text-green-600">0,00 lei</div>
+                  )}
+                </div>
+              </div>
+
+              <Separator className="my-2" />
+
+              <div className="flex justify-between font-semibold">
+                <span>Total</span>
+                <span>{total.toFixed(2)} lei</span>
               </div>
             </div>
-
-            <div className="flex justify-between text-sm">
-              <span>Transport</span>
-              <div className="text-right">
-                <span
-                  className={
-                    hasShippingDiscount ? "line-through text-gray-500" : ""
-                  }
-                >
-                  ${shipping.toFixed(2)}
-                </span>
-                {hasShippingDiscount && (
-                  <div className="text-green-600">$0.00</div>
-                )}
-              </div>
-            </div>
-
-            <Separator className="my-2" />
-
-            <div className="flex justify-between font-semibold">
-              <span>Total</span>
-              <span>${total.toFixed(2)}</span>
-            </div>
-          </div>
+          </CustomerPriceGate>
         </div>
       </div>
     </div>

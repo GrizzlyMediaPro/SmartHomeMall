@@ -8,6 +8,7 @@ import { Bundle } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { useLanguage } from "@/contexts/language-context";
+import CustomerPriceGate from "@/components/CustomerPriceGate";
 
 interface BundleShowcaseProps {
   bundles: Bundle[];
@@ -60,15 +61,19 @@ export default function BundleShowcase({ bundles }: BundleShowcaseProps) {
 
             <CardContent className="pt-0">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-gray-900">
-                    {bundle.price.toFixed(2)} lei
-                  </span>
-                  {isOnSale && (
-                    <span className="text-lg text-gray-500 line-through">
-                      {bundle.oldPrice?.toFixed(2)} lei
-                    </span>
-                  )}
+                <div className="flex flex-wrap items-baseline gap-2 min-w-0">
+                  <CustomerPriceGate>
+                    <>
+                      <span className="text-2xl font-bold text-gray-900">
+                        {bundle.price.toFixed(2)} lei
+                      </span>
+                      {isOnSale && (
+                        <span className="text-lg text-gray-500 line-through">
+                          {bundle.oldPrice?.toFixed(2)} lei
+                        </span>
+                      )}
+                    </>
+                  </CustomerPriceGate>
                 </div>
               </div>
 

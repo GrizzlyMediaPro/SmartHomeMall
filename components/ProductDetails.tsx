@@ -12,6 +12,7 @@ import {
 import Carousel from "@/components/Carousel";
 import { ProductWithVariants, ColorVariant } from "@/lib/types";
 import { ShoppingCart, Plus, Minus } from "lucide-react";
+import CustomerPriceGate from "@/components/CustomerPriceGate";
 
 interface ProductDetailsProps {
   product: ProductWithVariants;
@@ -120,35 +121,39 @@ export default function ProductDetails({
           {/* Prețul și reducerea */}
           <div className="mb-4 md:mb-8">
             {selectedVariant && (
-              <>
-                {selectedVariant.oldPrice &&
-                selectedVariant.oldPrice > selectedVariant.price ? (
-                  <>
-                    <p className="text-2xl md:text-3xl font-bold text-red-600">
+              <CustomerPriceGate className="block max-w-md">
+                <>
+                  {selectedVariant.oldPrice &&
+                  selectedVariant.oldPrice > selectedVariant.price ? (
+                    <>
+                      <p className="text-2xl md:text-3xl font-bold text-red-600">
+                        {selectedVariant.price.toFixed(2)} lei
+                      </p>
+                      <p className="text-base md:text-lg text-gray-500 line-through">
+                        {selectedVariant.oldPrice.toFixed(2)} lei
+                      </p>
+                      <p className="text-base md:text-lg text-green-600">
+                        Economisești{" "}
+                        {(
+                          selectedVariant.oldPrice - selectedVariant.price
+                        ).toFixed(2)}{" "}
+                        lei (
+                        {Math.round(
+                          (1 -
+                            selectedVariant.price /
+                              selectedVariant.oldPrice) *
+                            100
+                        )}
+                        %)
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-2xl md:text-3xl font-bold">
                       {selectedVariant.price.toFixed(2)} lei
                     </p>
-                    <p className="text-base md:text-lg text-gray-500 line-through">
-                      {selectedVariant.oldPrice.toFixed(2)} lei
-                    </p>
-                    <p className="text-base md:text-lg text-green-600">
-                      Economisești{" "}
-                      {(
-                        selectedVariant.oldPrice - selectedVariant.price
-                      ).toFixed(2)}{" "}
-                      lei (
-                      {Math.round(
-                        (1 - selectedVariant.price / selectedVariant.oldPrice) *
-                          100
-                      )}
-                      %)
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-2xl md:text-3xl font-bold">
-                    {selectedVariant.price.toFixed(2)} lei
-                  </p>
-                )}
-              </>
+                  )}
+                </>
+              </CustomerPriceGate>
             )}
           </div>
 

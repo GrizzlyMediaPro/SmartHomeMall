@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { useUser } from "@clerk/nextjs";
+import CustomerPriceGate from "@/components/CustomerPriceGate";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import Link from "next/link";
@@ -261,9 +262,11 @@ export default function CartContent() {
                 <p className="text-sm text-gray-600">
                   Color: {item.selectedColor}
                 </p>
-                <p className="text-sm font-medium">
-                  ${item.variant.price.toFixed(2)}
-                </p>
+                <CustomerPriceGate>
+                  <p className="text-sm font-medium">
+                    {item.variant.price.toFixed(2)} lei
+                  </p>
+                </CustomerPriceGate>
               </div>
             </div>
 
@@ -323,9 +326,11 @@ export default function CartContent() {
         ))}
 
         <div className="pt-4">
-          <div className="flex justify-between items-center text-xl font-bold">
+          <div className="flex justify-between items-center text-xl font-bold gap-4">
             <span>Total:</span>
-            <span>${state.total.toFixed(2)}</span>
+            <CustomerPriceGate>
+              <span>{state.total.toFixed(2)} lei</span>
+            </CustomerPriceGate>
           </div>
           <Button
             className="w-full mt-8"

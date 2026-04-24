@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { ProductWithVariants, ColorVariant } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import CustomerPriceGate from "@/components/CustomerPriceGate";
 
 export default function ProductCard({
   product,
@@ -159,19 +160,23 @@ export default function ProductCard({
 
           {/* Price and Add to Cart */}
           <div className="flex items-center justify-between mt-4">
-            <div className="flex items-baseline gap-1">
-              <p
-                className={`text-xl font-bold ${
-                  isOnSale ? "text-red-600" : ""
-                }`}
-              >
-                {selectedVariant?.price.toFixed(2)} lei
-              </p>
-              {isOnSale && (
-                <p className="text-xs text-gray-500 line-through">
-                  {selectedVariant?.oldPrice?.toFixed(2)} lei
-                </p>
-              )}
+            <div className="flex flex-wrap items-baseline gap-1 min-w-0 flex-1 mr-2">
+              <CustomerPriceGate>
+                <>
+                  <p
+                    className={`text-xl font-bold ${
+                      isOnSale ? "text-red-600" : ""
+                    }`}
+                  >
+                    {selectedVariant?.price.toFixed(2)} lei
+                  </p>
+                  {isOnSale && (
+                    <p className="text-xs text-gray-500 line-through">
+                      {selectedVariant?.oldPrice?.toFixed(2)} lei
+                    </p>
+                  )}
+                </>
+              </CustomerPriceGate>
             </div>
 
             <button

@@ -9,6 +9,7 @@ import Link from "next/link";
 import type { Product } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/language-context";
+import CustomerPriceGate from "@/components/CustomerPriceGate";
 
 interface SearchBarProps {
   className?: string;
@@ -124,9 +125,11 @@ export default function SearchBar({ className, transparent }: SearchBarProps) {
               />
               <div className="ml-2">
                 <p className="font-semibold">{product.name}</p>
-                <p className="text-sm text-gray-600">
-                  ${product.price.toFixed(2)}
-                </p>
+                <CustomerPriceGate className="block mt-0.5">
+                  <p className="text-sm text-gray-600">
+                    {product.price.toFixed(2)} lei
+                  </p>
+                </CustomerPriceGate>
               </div>
             </div>
           ))}
