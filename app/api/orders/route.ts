@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { auth } from '@clerk/nextjs/server'
+import { isAdmin } from '@/lib/auth'
 
 interface OrderDetails {
   id: string;
@@ -82,16 +84,20 @@ interface Order {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const userId = searchParams.get('userId')
-
-  if (!userId) {
-    return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
-  }
-
   try {
+    const { searchParams } = new URL(request.url)
+    const requestedUserId = searchParams.get('userId')
+    const { userId: currentUserId } = await auth()
+
+    if (!currentUserId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const adminStatus = await isAdmin()
+    const targetUserId = adminStatus && requestedUserId ? requestedUserId : currentUserId
+
     const orders = await prisma.order.findMany({
-      where: { userId },
+      where: { userId: targetUserId },
       include: {
         items: {
           include: {

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendAdminNotification, sendOrderConfirmation } from '@/lib/email'
 import { generateOrderNumber } from '@/lib/order-number'
+import { auth } from '@clerk/nextjs/server'
 
 interface Product {
   id: string;
@@ -13,6 +14,7 @@ interface Bundle {
 
 export async function POST(req: Request) {
   try {
+    const { userId: currentUserId } = await auth()
     const body = await req.json()
     const { items, userId, detailsId, paymentType, appliedDiscounts } = body
 
@@ -20,17 +22,32 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Nu există produse în coș' }, { status: 400 })
     }
 
+    if (currentUserId && userId && userId !== currentUserId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const safeUserId = currentUserId ?? null
+
     if (!detailsId) {
       return NextResponse.json({ error: 'Detaliile comenzii sunt obligatorii' }, { status: 400 })
     }
 
     // Verifică dacă detaliile comenzii există și dacă email-ul este valid
     const orderDetails = await prisma.orderDetails.findUnique({
-      where: { id: detailsId }
+      where: { id: detailsId },
+      select: {
+        id: true,
+        userId: true,
+        email: true,
+      },
     })
 
     if (!orderDetails) {
       return NextResponse.json({ error: 'Detaliile comenzii nu au fost găsite' }, { status: 400 })
+    }
+
+    if (orderDetails.userId !== safeUserId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Validare email simplă
@@ -111,7 +128,7 @@ export async function POST(req: Request) {
     const order = await prisma.order.create({
       data: {
         orderNumber,
-        userId: userId || null, // Allow null for guest orders
+        userId: safeUserId,
         total,
         paymentStatus: paymentType === 'card' ? 'COMPLETED' : 'PENDING',
         orderStatus: 'Comanda este in curs de procesare',
@@ -173,7 +190,10 @@ export async function POST(req: Request) {
       // Don't return error to client, as order was created successfully
     }
 
-    return NextResponse.json(order)
+    return NextResponse.json({
+      id: order.id,
+      orderNumber: order.orderNumber,
+    })
   } catch (error) {
     console.error('Error creating order:', error)
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })

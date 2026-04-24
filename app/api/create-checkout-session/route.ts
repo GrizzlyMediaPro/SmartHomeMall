@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@clerk/nextjs/server';
 
 interface Product {
   id: string;
@@ -38,8 +39,15 @@ interface CheckoutRequestBody {
 
 export async function POST(req: Request) {
   try {
+    const { userId: currentUserId } = await auth();
     const body = await req.json() as CheckoutRequestBody;
     const { items, userId, detailsId, paymentType, appliedDiscounts = [] } = body;
+
+    if (currentUserId && userId && userId !== currentUserId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const safeUserId = currentUserId ?? null;
 
     if (!items?.length) {
       return NextResponse.json({ error: 'Nu există produse în coș' }, { status: 400 });
@@ -54,12 +62,17 @@ export async function POST(req: Request) {
       where: { id: detailsId },
       select: {
         email: true,
-        id: true
+        id: true,
+        userId: true,
       }
     });
 
     if (!orderDetails) {
       return NextResponse.json({ error: 'Detaliile comenzii nu au fost găsite' }, { status: 400 });
+    }
+
+    if (orderDetails.userId !== safeUserId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Validare email simplă
@@ -167,7 +180,8 @@ export async function POST(req: Request) {
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cart`,
       customer_email: orderDetails.email,
       metadata: {
-        userId: userId || '',
+        // Bind session metadata to authenticated identity.
+        userId: safeUserId || '',
         detailsId,
         orderType: bundleItems.length > 0 && regularItems.length === 0 ? 'bundle' : 'product',
         regularItems: JSON.stringify(regularItems.map(item => ({
@@ -185,8 +199,6 @@ export async function POST(req: Request) {
         email: orderDetails.email,
       },
     });
-
-    console.log('Details for checkout session:', orderDetails);
 
     return NextResponse.json({ sessionId: session.id });
   } catch (err: any) {

@@ -1,16 +1,24 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { auth } from '@clerk/nextjs/server'
 
 export async function POST(req: Request) {
   try {
     const body = await req.json()
     const { rememberDetails, paymentType, ...orderDetails } = body
+    const { userId: currentUserId } = await auth()
 
-    console.log('Received order details:', orderDetails)
+    // Never trust userId from payload; bind data to authenticated user when present.
+    const payloadUserId = orderDetails.userId as string | null | undefined
+    if (currentUserId && payloadUserId && payloadUserId !== currentUserId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const safeUserId = currentUserId ?? null
 
     const savedDetails = await prisma.orderDetails.create({
       data: {
-        userId: orderDetails.userId,
+        userId: safeUserId,
         fullName: orderDetails.fullName,
         email: orderDetails.email,
         phoneNumber: orderDetails.phoneNumber,
@@ -30,7 +38,7 @@ export async function POST(req: Request) {
       },
     })
 
-    return NextResponse.json(savedDetails)
+    return NextResponse.json({ id: savedDetails.id })
   } catch (error) {
     console.error('Error saving order details:', error)
     return NextResponse.json({ error: 'Failed to save order details' }, { status: 500 })
